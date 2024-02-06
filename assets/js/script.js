@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
   
   //fetch author works
   function fetchAuthorWorks(key) {
-    debugger;
     const worksQueryUrl = "https://openlibrary.org/authors/" + key + "/works.json"
     fetch(worksQueryUrl)
       .then(function (response) {
@@ -59,28 +58,22 @@ document.addEventListener('DOMContentLoaded', function () {
       arrayOfArrays.push(array.slice(i, i += size))
     }
   
-    //set first carousel item of carousel 
-    var firstArray = arrayOfArrays[0];
-    var firstCardWrapper = $('#firstCardWrapper');
-    for (var i = 0; i < firstArray.length; i++) {
-  
-      var coverUrl = "https://covers.openlibrary.org/b/id/" + firstArray[i] + "-M.jpg"
-      var newCard = $('<div>')
-      newCard.addClass("card book-card")
-      var coverImg = $('<img>')
-      coverImg.attr('src', coverUrl);
-      newCard.append(coverImg);
-      firstCardWrapper.append(newCard);
-    }
-  
-  
     var innerCarousel = $("#innerCarousel");
-    //append more carousel items
-    for (var j = 1; j < arrayOfArrays.length; j++) {
+    //clear carousel to begin with
+    innerCarousel.empty();
+    
+    //append carousel items
+    for (var j = 0; j < arrayOfArrays.length; j++) {
   
   
       var newCarouselItem = $('<div>')
-      newCarouselItem.addClass('carousel-item');
+      if(j === 0){
+        //set class active for first carousel item
+        newCarouselItem.addClass('carousel-item active');
+      }else{
+        newCarouselItem.addClass('carousel-item');
+      }
+      
       var newCardDiv = $('<div>');
       newCardDiv.addClass("card-wrapper")
       newCarouselItem.append(newCardDiv);
