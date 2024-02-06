@@ -1,14 +1,17 @@
-var clickedImgCover = '';
+var clickedImgId = '';
 var carousel = $('#cover-carousel');
 var innerCarousel = $("#innerCarousel");
 // Listen for any input that is entered into the search box
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('search-form').addEventListener('submit', function (event) {
     event.preventDefault();
+    
     const authorName = document.getElementById('author-search').value;
     searchAuthorName(authorName);
+    fetchAuthorWorks(authorName);
     fetchRandomDrinkInformation();
     resetPage();
+    
   });
 });
 
@@ -22,8 +25,8 @@ function searchAuthorName(authorName) {
       return response.json();
     })
     .then(function (authorData) {
-      var authorKey = authorData.docs[0].key;
-      fetchAuthorWorks(authorKey);
+    //   var authorKey = authorData.docs[0].key;
+      
       displayAuthorInformation(authorData);
     });
   // Call the function to fetch random drink information
@@ -31,8 +34,9 @@ function searchAuthorName(authorName) {
 }
 
 //fetch author works
-function fetchAuthorWorks(key) {
-  const worksQueryUrl = "https://openlibrary.org/authors/" + key + "/works.json"
+function fetchAuthorWorks(name) {
+    var apiKey = "AIzaSyDtC1WiKcd8r4Tngf5rf4wik_-WLFWrAeo"; 
+  const worksQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=inauthor:" +name+ "&langRestrict=en&key="+apiKey;
   fetch(worksQueryUrl)
     .then(function (response) {
       return response.json()
@@ -40,26 +44,25 @@ function fetchAuthorWorks(key) {
     .then(function (authorWorks) {
       var coversArray = [];
       console.log(authorWorks)
-      for (var i = 0; i < (authorWorks.entries).length; i++) {
+      for (var i = 0; i < (authorWorks.items).length; i++) {
+        var obj = {}
         //check if cover ID exists for work
-        if ('covers' in authorWorks.entries[i]) {
-          var coverToPush = authorWorks.entries[i].covers[0];
-          if (coverToPush > 0) {
-            coversArray.push(coverToPush);
+
+          var coverToPush = authorWorks.items[i].volumeInfo.imageLinks.thumbnail;
+          var bookId = authorWorks.items[i].id;
+          obj.id = bookId;
+          obj.thumbnail = coverToPush;
+            coversArray.push(obj);
           }
-        }
-      }
+        
+      
       displayBookCarousel(coversArray);
       //Handle book cover click event
       carousel.on("click", ".card", function (event) {
         console.log("I'm clicked");
-        var clickedImgSrc = ($(event.target)).attr('src');
-        //replace all non-numeric character in string with empty string to extract cover ID
-        clickedImgCover = clickedImgSrc.replace(/\D/g, "");
-
-        displayBookDesc(authorWorks.entries);
-        
-
+        clickedImgId = ($(event.target)).attr('id');
+        console.log(clickedImgId)
+        displayBookDesc(authorWorks);        
       })
     })
 }
@@ -95,11 +98,13 @@ function displayBookCarousel(array) {
     newCardDiv.addClass("card-wrapper")
     newCarouselItem.append(newCardDiv);
     for (var i = 0; i < arrayOfArrays[j].length; i++) {
-      var coverUrl = "https://covers.openlibrary.org/b/id/" + arrayOfArrays[j][i] + "-M.jpg"
+      var coverUrl = arrayOfArrays[j][i].thumbnail;
+      var coverId = arrayOfArrays[j][i].id;
       var newCard = $('<div>')
       newCard.addClass("card book-card")
       var coverImg = $('<img>')
       coverImg.attr('src', coverUrl);
+      coverImg.attr('id', coverId);
       newCard.append(coverImg);
       newCardDiv.append(newCard);
 
@@ -120,53 +125,36 @@ function displayBookCarousel(array) {
 
 }
 
-function displayBookDesc(authorWorks){
-  console.log(clickedImgCover);
-  var bookDescCol = $('#book-desc-col')
-  //set all fields to blank to begin with
-  $('book-desc-col').children().text("");
-  // $('#book-desc').text("Click on a book to view its description");
-  // $('#book-title').text("");
-  // $('#book-url').text("");
-  // Fetch work key for clicked image
-  for(var i = 0; i < authorWorks.length; i++){
-    if ('covers' in authorWorks[i]){
-      if((authorWorks[i].covers).includes(Number(clickedImgCover))){
-        console.log("yes")
-        var workKey = authorWorks[i].key;
-        console.log(workKey);
-        
-        const thisWorkPageURl = 'https://openlibrary.org/' + workKey;
+function displayBookDesc(authorWorks) {
+    var bookDescCol = $('#book-desc-col')
+    //set all fields to blank to begin with
+    $('#book-desc-col').children().text('');
+    // $('#book-desc').text("Click on a book to view its description");
+    // $('#book-title').text("");
+    // $('#book-url').text("");
+    // Fetch work key for clicked image
 
-        const thisWorkUrl = 'https://openlibrary.org/' + workKey + '.json';
-        const url = "https://cors-anywhere-jung-48d4feb9d097.herokuapp.com/" + thisWorkUrl;
-        fetch(url)
-        .then(function(response){
-          return response.json()
-        })
-        .then(function(thisWork){
-          // console.log(thisWork)
-          $('#book-title').text(thisWork.title);
-          var thisBookDesc =''
-          if((thisWork.description).length){
-            var thisBookDesc = thisWork.description;
-          }else if((thisWork.description.value).length){
-            thisBookDesc = thisWork.description.value;
-          }else{
-            thisBookDesc = '';
-          }
-          if(thisBookDesc.length > 350){
-            thisBookDesc = thisBookDesc.substring(0, 400) + " ...";
-          }
-          $('#book-desc').text(thisBookDesc);
-          $('#book-url').text('View more in Open Library')
-          $('#book-url').attr("href", thisWorkPageURl);
-          $('#book-url').attr("target", "_blank");
+    for (var i = 0; i < authorWorks.items.length; i++) {
 
-          console.log(thisWork.description.value)
-        })
+        if (authorWorks.items[i].id === clickedImgId) {
+            var bookTitle = authorWorks.items[i].volumeInfo.title;
+            var bookUrl = authorWorks.items[i].volumeInfo.canonicalVolumeLink;
+            var bookDesc = ''
+            if ((authorWorks.items[i].volumeInfo.description).length) {
+                bookDesc = authorWorks.items[i].volumeInfo.description;
+            } else {
+                bookDesc = '';
+            }
+            if (bookDesc.length > 400) {
+                bookDesc = bookDesc.substring(0, 400) + " ...";
+            }
+            
+            $('#book-title').text(bookTitle);
+            $('#book-desc').text(bookDesc);
+            $('#book-url').text('View more in Google Books');
+            $('#book-url').attr("href", bookUrl);
+            $('#book-url').attr("target", "_blank");
         }
-      }
     }
 }
 
@@ -280,8 +268,8 @@ function getAllIngredients(drink) {
 // Function to reset the page
 function resetPage() {
   $("#author-search").val(""); // Assuming .drinkImg is the class of your image element
-  $('book-desc-col').children().text("");
-  $('author').children().text();
+  $('#book-desc-col').children().text('');
+  $('#author').children().text('');
 
   innerCarousel.empty();
 }
