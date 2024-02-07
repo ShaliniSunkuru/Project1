@@ -3,11 +3,31 @@ var carousel = $('#cover-carousel');
 var innerCarousel = $("#innerCarousel");
 var defaultCover = "../../images/default-book-cover.png"
 
+
+pageLoad();
+
+function pageLoad(){
+  var defaultAuthor = " "
+  if(localStorage.getItem("author")!==null){
+    defaultAuthor = localStorage.getItem("author");
+  }else{
+    defaultAuthor = "Dan Brown"
+  }
+  fetchAuthorWorks(defaultAuthor);
+  searchAuthorName(defaultAuthor);
+  fetchRandomDrinkInformation();  
+}
+
+function saveAuthorToLocalStorage(author){
+  localStorage.setItem("author", author);
+}
+
 // Listen for any input that is entered into the search box
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('search-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const authorName = document.getElementById('author-search').value;
+    saveAuthorToLocalStorage(authorName);
     fetchAuthorWorks(authorName);
     searchAuthorName(authorName);
     fetchRandomDrinkInformation();
@@ -164,19 +184,35 @@ function displayAuthorInformation(authorData) {
   var key = authorData.docs[0].key;
   const authorKeyAPI = `https://openlibrary.org/authors/${key}.json`;
 
-  // Fetch additional author information using the obtained key
-  fetch(authorKeyAPI)
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (authorKey) {
-      console.log(authorKey);
-      document.getElementById('name').textContent = `Author: ${authorKey.name}`;
-      document.getElementById('dob').textContent = `Date of Birth: ${authorKey.birth_date}`;
-      document.getElementById('bio').textContent = `Bio: ${authorKey.bio}`;
-    });
-}
+// Fetch additional author information using the obtained key
+fetch(authorKeyAPI)
+  .then(function (response) { 
+    return response.json();
+  })
+  .then(function (authorKey) {
+    console.log(authorKey);
 
+    // Check if 'bio' property exists and contains words relating to sources
+    let indexOfWords;
+    // Search for various words in the bio api section
+    if (authorKey.bio.includes('([Source')) {    
+      indexOfWords = authorKey.bio.indexOf('([Source');
+    } else if (authorKey.bio.includes('[Source')) {      
+      indexOfWords = authorKey.bio.indexOf('[Source');
+    } else if (authorKey.bio.includes('[Wikipedia')) {      
+      indexOfWords = authorKey.bio.indexOf('[Wikipedia');
+    } else if (authorKey.bio.includes('<sup>')) {      
+      indexOfWords = authorKey.bio.indexOf('<sup>');
+    }
+    // Remove text after the above words are located    
+      authorKey.bio = authorKey.bio.substring(0, indexOfWords);    
+
+    // Display author information on the HTML elements
+    document.getElementById('name').textContent = `Author: ${authorKey.name}`;
+    document.getElementById('dob').textContent = `Date of Birth: ${authorKey.birth_date}`;
+    document.getElementById('bio').textContent = `Bio: ${authorKey.bio}`;
+  });
+}
 
 function fetchRandomDrinkInformation() {
   var cocktailUrl = "https://thecocktaildb.com/api/json/v1/1/random.php";
