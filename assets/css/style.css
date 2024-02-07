@@ -4,31 +4,65 @@
 
  .card-wrapper{
     display: flex;
-    border: 1px solid brown;
-    margin: 5px;
 }
 
 .book-card{
     margin: 5px;
+}
+.book-card:hover{
+    cursor:grab;
 }
 .book-card img{
     width: 125px;
     height: 200px;
 }
 
-
 .column{
-    border: 1px solid black;
-    padding: 50px 5px;
+    border: 1px solid gray;
+}
+#cover-carousel{
+    margin: 50px 5px;
 }
 .carousel-button{
     width: fit-content;
     height: fit-content;
     top: 100px;
     background-color: gray;
-    border-radius: 50%;
-    
+    border-radius: 50%;    
 }
+#cover-fig{
+    position: relative;
+    margin: 0px;
+}
+#cover-caption{
+    position: absolute;
+    bottom: 100px;
+    left: 5px;
+    color: gray;
+}
+#book-desc-col{
+    padding: 20px 5px;   
+}
+#author{
+    padding: 20px;
+}
+#book-desc{
+    margin: 20px 15px;
+    max-height: 200px;
+    font-size: 14px;
+    text-align: justify;
+}
+#book-url{
+    margin-left: 20px;
+    font-size: small;
+}
+
+.bioContainer{
+    margin-top: 20px;
+    padding: 20px;   
+    border: 1px solid black;
+}
+    
 .drinkImg{
     width: fit-content;
 }

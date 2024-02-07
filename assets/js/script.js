@@ -1,17 +1,17 @@
 var clickedImgId = '';
 var carousel = $('#cover-carousel');
 var innerCarousel = $("#innerCarousel");
+var defaultCover = "../../images/default-book-cover.png"
+
 // Listen for any input that is entered into the search box
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('search-form').addEventListener('submit', function (event) {
     event.preventDefault();
-    
     const authorName = document.getElementById('author-search').value;
-    searchAuthorName(authorName);
     fetchAuthorWorks(authorName);
+    searchAuthorName(authorName);
     fetchRandomDrinkInformation();
     resetPage();
-    
   });
 });
 
@@ -25,8 +25,7 @@ function searchAuthorName(authorName) {
       return response.json();
     })
     .then(function (authorData) {
-    //   var authorKey = authorData.docs[0].key;
-      
+
       displayAuthorInformation(authorData);
     });
   // Call the function to fetch random drink information
@@ -35,8 +34,9 @@ function searchAuthorName(authorName) {
 
 //fetch author works
 function fetchAuthorWorks(name) {
-    var apiKey = "AIzaSyDtC1WiKcd8r4Tngf5rf4wik_-WLFWrAeo"; 
-  const worksQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=inauthor:" +name+ "&langRestrict=en&key="+apiKey;
+  var apiKey = "AIzaSyDtC1WiKcd8r4Tngf5rf4wik_-WLFWrAeo"; 
+  const worksQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=inauthor:" +name+ "&langRestrict=en&maxResults=30&key="+apiKey;
+  
   fetch(worksQueryUrl)
     .then(function (response) {
       return response.json()
@@ -44,29 +44,32 @@ function fetchAuthorWorks(name) {
     .then(function (authorWorks) {
       var coversArray = [];
       console.log(authorWorks)
+      //create array of objects with keys of book id, book cover thumbnail, 
+      //and book title for caption
       for (var i = 0; i < (authorWorks.items).length; i++) {
-        var obj = {}
-        //check if cover ID exists for work
-
-          var coverToPush = authorWorks.items[i].volumeInfo.imageLinks.thumbnail;
-          var bookId = authorWorks.items[i].id;
-          obj.id = bookId;
-          obj.thumbnail = coverToPush;
-            coversArray.push(obj);
+          var coverObj = {};
+          var bookCover = '';
+          if("imageLinks" in authorWorks.items[i].volumeInfo){
+            bookCover = authorWorks.items[i].volumeInfo.imageLinks.thumbnail;
+          }else{
+            bookCover = defaultCover;
           }
-        
-      
+          var bookId = authorWorks.items[i].id;
+          var bookTitle = authorWorks.items[i].volumeInfo.title;
+          coverObj.id = bookId;
+          coverObj.thumbnail = bookCover;
+          coverObj.title = bookTitle;
+          coversArray.push(coverObj);  
+        }
+
       displayBookCarousel(coversArray);
       //Handle book cover click event
       carousel.on("click", ".card", function (event) {
-        console.log("I'm clicked");
         clickedImgId = ($(event.target)).attr('id');
-        console.log(clickedImgId)
-        displayBookDesc(authorWorks);        
+        displayBookDesc(authorWorks.items);
       })
     })
 }
-
 
 function displayBookCarousel(array) {
 
@@ -78,13 +81,8 @@ function displayBookCarousel(array) {
     arrayOfArrays.push(array.slice(i, i += size))
   }
 
-  
-  //clear carousel to begin with
-  // innerCarousel.empty();
-  
   //append carousel items
   for (var j = 0; j < arrayOfArrays.length; j++) {
-
 
     var newCarouselItem = $('<div>')
     if(j === 0){
@@ -93,68 +91,66 @@ function displayBookCarousel(array) {
     }else{
       newCarouselItem.addClass('carousel-item');
     }
-    
+    //create html for carousel structure and assign values
     var newCardDiv = $('<div>');
     newCardDiv.addClass("card-wrapper")
     newCarouselItem.append(newCardDiv);
     for (var i = 0; i < arrayOfArrays[j].length; i++) {
       var coverUrl = arrayOfArrays[j][i].thumbnail;
       var coverId = arrayOfArrays[j][i].id;
-      var newCard = $('<div>')
-      newCard.addClass("card book-card")
-      var coverImg = $('<img>')
+      var newCard = $('<div>');
+      newCard.addClass("card book-card");
+      var fig = $('<figure>');
+      fig.attr('id', 'cover-fig');
+      var coverImg = $('<img>');
       coverImg.attr('src', coverUrl);
       coverImg.attr('id', coverId);
-      newCard.append(coverImg);
+      var caption = $('<figcaption>');
+      caption.attr('id', 'cover-caption');
+      if(coverUrl === defaultCover){
+        //set caption as book title for default cover image
+        caption.text(arrayOfArrays[j][i].title);
+      }else{
+        caption.text('');
+      }
+      fig.append(coverImg);
+      fig.append(caption);
+      newCard.append(fig);
       newCardDiv.append(newCard);
-
     }
 
     innerCarousel.append(newCarouselItem);
     $('#book-desc').text("Click on a book to view its description");
   }
   }else{
+    //If no books are returned
     var coverCarousel = $('#cover-carousel');
     coverCarousel.addClass('invisible');
     var bookCol = $('#book-col');
     var newP = $('<p>');
     newP.text("Sorry, no books to display!")
     bookCol.append(newP);
-  }
-  
-
+  }  
 }
 
-function displayBookDesc(authorWorks) {
-    var bookDescCol = $('#book-desc-col')
-    //set all fields to blank to begin with
-    $('#book-desc-col').children().text('');
-    // $('#book-desc').text("Click on a book to view its description");
-    // $('#book-title').text("");
-    // $('#book-url').text("");
-    // Fetch work key for clicked image
+function displayBookDesc(items){
 
-    for (var i = 0; i < authorWorks.items.length; i++) {
+  var bookDescCol = $('#book-desc-col')
+  //set all fields to blank to begin with
+  $('book-desc-col').children().text("");
 
-        if (authorWorks.items[i].id === clickedImgId) {
-            var bookTitle = authorWorks.items[i].volumeInfo.title;
-            var bookUrl = authorWorks.items[i].volumeInfo.canonicalVolumeLink;
-            var bookDesc = ''
-            if ((authorWorks.items[i].volumeInfo.description).length) {
-                bookDesc = authorWorks.items[i].volumeInfo.description;
-            } else {
-                bookDesc = '';
-            }
-            if (bookDesc.length > 400) {
-                bookDesc = bookDesc.substring(0, 400) + " ...";
-            }
-            
-            $('#book-title').text(bookTitle);
-            $('#book-desc').text(bookDesc);
-            $('#book-url').text('View more in Google Books');
-            $('#book-url').attr("href", bookUrl);
-            $('#book-url').attr("target", "_blank");
-        }
+  // Fetch book description for clicked image id
+  for(var i = 0; i < items.length; i++){
+      if(items[i].id === clickedImgId){
+        var bookTitle = items[i].volumeInfo.title;
+        var bookUrl = items[i].volumeInfo.canonicalVolumeLink;
+        var bookDesc = items[i].volumeInfo.description;
+          $('#book-title').text(bookTitle);
+          $('#book-desc').text(bookDesc);
+          $('#book-url').text('View in Google Books')
+          $('#book-url').attr("href", bookUrl);
+          $('#book-url').attr("target", "_blank");        
+        }      
     }
 }
 
@@ -270,7 +266,6 @@ function resetPage() {
   $("#author-search").val(""); // Assuming .drinkImg is the class of your image element
   $('#book-desc-col').children().text('');
   $('#author').children().text('');
-
   innerCarousel.empty();
 }
 

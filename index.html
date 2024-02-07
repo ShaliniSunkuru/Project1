@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css" />
-    <title>Document</title>
+    <title>Literary Lounge</title>
 </head>
 
 <body>
@@ -77,11 +77,10 @@
             
             </div>
             <!-- Book details -->
-            <div class="column synopsis col-lg-4 col-md-4 text-wrap text-center" id="book-desc-col">
-                <!-- <h4 class="text-center">Book Details</h4> -->
-                <h5 id="book-title"> </h5>
-                <p id="book-desc"> </p>
-                <a id="book-url" href=""></a>
+            <div class="column synopsis col-lg-4 col-md-4" id="book-desc-col">
+                <h5 id="book-title" class="text-center"></h5>
+                <div id="book-desc" class="overflow-auto"> </div>
+                <a id="book-url"></a>
             </div>
             <div class="column author col=lg-4 col-md-4" id="author">
                 <p id="name"></p>
@@ -92,7 +91,11 @@
     </div>
 
     <!-- Author section -->
-    
+    <div class="container bioContainer ml-5 mr-5 rounded">
+        <div class="col-lg-12 col-md-4 text-wrap text-left">
+            <p id="bio"></p>       
+        </div>
+    </div>
 
     <!-- Section 10 and 11 start-->
 
