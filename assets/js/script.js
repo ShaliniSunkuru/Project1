@@ -1,7 +1,7 @@
 var clickedImgId = '';
 var carousel = $('#cover-carousel');
 var innerCarousel = $("#innerCarousel");
-var defaultCover = "../../images/default-book-cover.png"
+var defaultCover = "images/default-book-cover.png"
 
 
 pageLoad();
